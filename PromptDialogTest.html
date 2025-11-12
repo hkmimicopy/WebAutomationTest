@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>入力ダイアログ練習</title>
+  <!-- 外部CSSを参照 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 上部リンク（DownloadTest.html と同じ構成） -->
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <!-- 説明（簡潔に動作を記載） -->
+  <h4 class="container_explain" style="text-align: center">
+    ボタンを押すとブラウザの入力ダイアログが開きます。OKで入力内容を表示、キャンセルで何も変更しません。
+  </h4>
+
+  <!-- ボタン（style.css の .container と button を利用） -->
+  <div class="container">
+    <button id="openPromptBtn">入力ダイアログを開く</button>
+  </div>
+
+  <!-- 結果表示（style.css の .card を利用） -->
+  <main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+    <div class="card" id="resultCard">
+      <div style="font-weight: bold; margin-bottom: .5rem;">入力結果</div>
+      <div id="resultText">（まだ入力はありません）</div>
+    </div>
+  </main>
+
+  <script>
+    // ① クリックでブラウザの入力ダイアログを表示
+    // ② OK の場合、入力テキストを画面に表示
+    // ③ キャンセルの場合、何もせず戻る
+    document.getElementById('openPromptBtn').addEventListener('click', () => {
+      const value = window.prompt('テキストを入力してください'); // ブラウザ標準の入力ダイアログ
+      if (value === null) {
+        // キャンセル時は何もしない（画面はそのまま）
+        return;
+      }
+      // OK時：入力テキストを表示（空文字もそのまま表示します）
+      document.getElementById('resultText').textContent = value;
+    });
+  </script>
+</body>
+</html>
