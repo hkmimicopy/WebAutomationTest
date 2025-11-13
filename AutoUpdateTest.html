@@ -11,7 +11,7 @@
   <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
 
   <h4 class="container_explain" style="text-align: center">
-    このページは開くと2秒後に内容が自動更新されます。
+    このページは開くと2秒後にホーム画面に遷移します。
   </h4>
 
   <main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
@@ -24,7 +24,7 @@
   <script>
     // ページ読み込み後2秒で内容を書き換える
     setTimeout(() => {
-      document.getElementById("displayText").textContent = "内容が更新されました！";
+      window.location.href = "index.html";
     }, 2000);
   </script>
 
