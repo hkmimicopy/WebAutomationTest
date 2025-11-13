@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>自動更新テスト</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 上部リンク -->
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <h4 class="container_explain" style="text-align: center">
+    このページは開くと2秒後に内容が自動更新されます。
+  </h4>
+
+  <main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+    <div class="card">
+      <div style="font-weight: bold; margin-bottom: .5rem;">表示内容</div>
+      <div id="displayText">読み込み中…</div>
+    </div>
+  </main>
+
+  <script>
+    // ページ読み込み後2秒で内容を書き換える
+    setTimeout(() => {
+      document.getElementById("displayText").textContent = "内容が更新されました！";
+    }, 2000);
+  </script>
+
+</body>
+</html>
