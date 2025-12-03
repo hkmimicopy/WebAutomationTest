@@ -123,84 +123,103 @@
   </main>
 
   <script>
-    // サジェストの候補
-    const candidates = ["テスト1", "テスト2", "テスト3", "テスト4", "テスト5"];
+  // サジェストの候補
+  const candidates = ["テスト1", "テスト2", "テスト3", "テスト4", "テスト5"];
 
-    const input = document.getElementById("suggestInput");
-    const dropdown = document.getElementById("suggestDropdown");
-    const submitBtn = document.getElementById("submitBtn");
-    const resultText = document.getElementById("resultText");
+  const input = document.getElementById("suggestInput");
+  const dropdown = document.getElementById("suggestDropdown");
+  const submitBtn = document.getElementById("submitBtn");
+  const resultText = document.getElementById("resultText");
 
-    let isSelectingSuggestion = false; // サジェストクリック中かどうか判定用
+  let isSelectingSuggestion = false;   // サジェストクリック中かどうか
+  let selectedFromSuggestion = false;  // ★ サジェストから選択したかどうか
+  let selectedValue = "";              // ★ 最後にサジェストで選んだ値
 
-    // 入力値に応じてサジェストを生成
-    input.addEventListener("input", () => {
-      const value = input.value.trim();
+  // 入力値に応じてサジェストを生成
+  input.addEventListener("input", () => {
+    const value = input.value.trim();
 
-      // 空文字の場合はサジェスト非表示
-      if (!value) {
-        clearSuggestions();
-        return;
-      }
+    // キーボード入力が行われたら「サジェストからの確定状態」は一旦リセット
+    selectedFromSuggestion = false;
+    selectedValue = "";
 
-      // ② 先頭一致する候補だけフィルタ
-      const matched = candidates.filter(c => c.startsWith(value));
+    // 空文字の場合はサジェスト非表示
+    if (!value) {
+      clearSuggestions();
+      return;
+    }
 
-      if (matched.length === 0) {
-        clearSuggestions();
-        return;
-      }
+    // 先頭一致する候補だけフィルタ
+    const matched = candidates.filter(c => c.startsWith(value));
 
-      // サジェスト要素を生成
-      dropdown.innerHTML = "";
-      matched.forEach(item => {
-        const div = document.createElement("div");
-        div.textContent = item;
-        div.className = "suggest-item";
+    if (matched.length === 0) {
+      clearSuggestions();
+      return;
+    }
 
-        // ④ サジェストクリックで値確定
-        div.addEventListener("mousedown", (e) => {
-          // blurより先に動くよう mousedown で処理
-          e.preventDefault();
-          isSelectingSuggestion = true;
-          input.value = item;          // 入力ボックスに確定値をセット
-          clearSuggestions();          // サジェストを閉じる
-        });
+    // サジェスト要素を生成
+    dropdown.innerHTML = "";
+    matched.forEach(item => {
+      const div = document.createElement("div");
+      div.textContent = item;
+      div.className = "suggest-item";
 
-        dropdown.appendChild(div);
+      // サジェストクリックで値確定
+      div.addEventListener("mousedown", (e) => {
+        // blurより先に動くよう mousedown で処理
+        e.preventDefault();
+        isSelectingSuggestion = true;
+
+        input.value = item;      // 入力ボックスに確定値をセット
+        selectedFromSuggestion = true;  // ★ 正規ルートでの確定
+        selectedValue = item;           // ★ 何を選んだか記録
+
+        clearSuggestions();      // サジェストを閉じる
       });
 
-      dropdown.classList.remove("hidden");
+      dropdown.appendChild(div);
     });
 
-    // フォーカスが外れたときの挙動
-    input.addEventListener("blur", () => {
-      // サジェスト選択中の blur は特別扱い
-      setTimeout(() => {
-        if (!isSelectingSuggestion) {
-          // ③ 何も選択せずにフォーカスが外れた場合 → 入力内容をクリア
-          input.value = "";
-        }
-        clearSuggestions();
-        isSelectingSuggestion = false;
-      }, 0);
-    });
+    dropdown.classList.remove("hidden");
+  });
 
-    // ボタン押下で入力内容を下部に表示
-    submitBtn.addEventListener("click", () => {
-      const value = input.value.trim();
-      if (value) {
-        resultText.textContent = `入力内容：${value}`;
-      } else {
-        resultText.textContent = "入力内容がありません。";
+  // フォーカスが外れたときの挙動
+  input.addEventListener("blur", () => {
+    // サジェスト選択中の blur は特別扱い
+    setTimeout(() => {
+      if (!isSelectingSuggestion) {
+        // 何も選択せずにフォーカスが外れた場合 → 入力内容をクリア
+        input.value = "";
+        // もちろんここでは selectedFromSuggestion も false のまま
       }
-    });
+      clearSuggestions();
+      isSelectingSuggestion = false;
+    }, 0);
+  });
 
-    // サジェストを閉じる共通関数
-    function clearSuggestions() {
-      dropdown.innerHTML = "";
-      dropdown.classList.add("hidden");
+  // ボタン押下で入力内容を下部に表示
+  submitBtn.addEventListener("click", () => {
+    const value = input.value.trim();
+
+    // ★ サジェストから選んだ値以外は一切受け付けない
+    if (!selectedFromSuggestion || value !== selectedValue) {
+      resultText.textContent = "サジェストから選択した値のみ使用できます。";
+      return;
     }
-  </script>
+
+    if (value) {
+      resultText.textContent = `入力内容：${value}`;
+    } else {
+      resultText.textContent = "入力内容がありません。";
+    }
+  });
+
+  // サジェストを閉じる共通関数
+  function clearSuggestions() {
+    dropdown.innerHTML = "";
+    dropdown.classList.add("hidden");
+  }
+</script>
+
 </body>
 </html>
