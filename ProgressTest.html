@@ -63,17 +63,17 @@
   </main>
 
   <script>
-    // ページの読み込みが完了したら処理開始
-    window.addEventListener("load", () => {
-      const loading = document.getElementById("loadingArea");
-      const complete = document.getElementById("completeArea");
+  // ページの読み込みが完了したら処理開始
+  window.addEventListener("load", () => {
+    const loading = document.getElementById("loadingArea");
+    const complete = document.getElementById("completeArea");
 
-      // 5秒後にプログレスを消して完了メッセージを表示
-      setTimeout(() => {
-        loading.classList.add("hidden");
-        complete.classList.remove("hidden");
-      }, 5000);
-    });
-  </script>
+    // 5秒後にプログレスDOMを完全削除して完了メッセージを表示
+    setTimeout(() => {
+      loading.remove();                     // ← DOMから完全削除！！
+      complete.classList.remove("hidden");  // 完了表示を表示
+    }, 5000);
+  });
+</script>
 </body>
 </html>
