@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>読み込みプログレス表示テスト</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- このページ専用の簡単なスタイル（スピナー用） -->
+  <style>
+    .progress-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 4px solid #ccc;
+      border-top-color: #333;   /* 上だけ色を変えて回転を見せる */
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 上部にインデックスへのリンク -->
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <h4 class="container_explain" style="text-align: center">
+    段階的な読み込みをシミュレートするページです。<br>
+    最初にプログレスが表示され、5秒後に完了メッセージに切り替わります。
+  </h4>
+
+  <main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
+    <div class="card">
+      <div style="font-weight: bold; margin-bottom: .5rem;">ロード状態</div>
+
+      <!-- 読み込み中エリア -->
+      <div id="loadingArea" class="progress-wrapper">
+        <div class="spinner"></div>
+        <div>読み込み中です...</div>
+      </div>
+
+      <!-- 読み込み完了エリア（最初は非表示） -->
+      <div id="completeArea" class="progress-wrapper hidden">
+        <div>読み込みが完了しました。</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ページの読み込みが完了したら処理開始
+    window.addEventListener("load", () => {
+      const loading = document.getElementById("loadingArea");
+      const complete = document.getElementById("completeArea");
+
+      // 5秒後にプログレスを消して完了メッセージを表示
+      setTimeout(() => {
+        loading.classList.add("hidden");
+        complete.classList.remove("hidden");
+      }, 5000);
+    });
+  </script>
+</body>
+</html>
