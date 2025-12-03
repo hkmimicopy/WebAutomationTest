@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>サジェスト入力テスト</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* サジェスト周りの簡易スタイル（最小限） */
+    .suggest-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .suggest-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .suggest-input-row input[type="text"] {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .suggest-list-box {
+      position: relative;
+    }
+
+    .suggest-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .suggest-item {
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .suggest-item:hover {
+      background: #f0f0f0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .candidate-list {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .candidate-list span {
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    #resultArea {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #ddd;
+      min-height: 1.5em;
+    }
+  </style>
+</head>
+<body>
+  <!-- 上部にインデックスへのリンク -->
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <h4 class="container_explain" style="text-align: center">
+    テキストボックスに入力すると候補がサジェストされます。<br>
+    サジェストをクリックして値を確定し、ボタンで下部に表示します。
+  </h4>
+
+  <main>
+    <div class="card">
+      <div class="suggest-container">
+        <div style="font-weight: bold; margin-bottom: .5rem;">サジェスト候補一覧</div>
+        <!-- ① 画面上に候補を表示 -->
+        <div class="candidate-list" id="candidateList">
+          <!-- JavaScript側と同じ配列内容をここにも表示します -->
+          <span>テスト1</span>
+          <span>テスト2</span>
+          <span>テスト3</span>
+          <span>テスト4</span>
+          <span>テスト5</span>
+        </div>
+
+        <!-- 入力 + サジェスト表示エリア -->
+        <div class="suggest-list-box">
+          <div class="suggest-input-row">
+            <!-- テキストボックス -->
+            <input
+              type="text"
+              id="suggestInput"
+              placeholder="テキストを入力してください（例：テスト1）"
+              autocomplete="off"
+            >
+            <!-- ④ クリックで入力値を下部に表示 -->
+            <button id="submitBtn">決定して下に表示</button>
+          </div>
+
+          <!-- ② サジェスト表示エリア（動的に中身を生成） -->
+          <div id="suggestDropdown" class="suggest-dropdown hidden"></div>
+        </div>
+
+        <!-- ④ ボタン押下でここに入力内容を表示 -->
+        <div id="resultArea">
+          <span id="resultText">（まだ入力内容は表示されていません）</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // サジェストの候補
+    const candidates = ["テスト1", "テスト2", "テスト3", "テスト4", "テスト5"];
+
+    const input = document.getElementById("suggestInput");
+    const dropdown = document.getElementById("suggestDropdown");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultText = document.getElementById("resultText");
+
+    let isSelectingSuggestion = false; // サジェストクリック中かどうか判定用
+
+    // 入力値に応じてサジェストを生成
+    input.addEventListener("input", () => {
+      const value = input.value.trim();
+
+      // 空文字の場合はサジェスト非表示
+      if (!value) {
+        clearSuggestions();
+        return;
+      }
+
+      // ② 先頭一致する候補だけフィルタ
+      const matched = candidates.filter(c => c.startsWith(value));
+
+      if (matched.length === 0) {
+        clearSuggestions();
+        return;
+      }
+
+      // サジェスト要素を生成
+      dropdown.innerHTML = "";
+      matched.forEach(item => {
+        const div = document.createElement("div");
+        div.textContent = item;
+        div.className = "suggest-item";
+
+        // ④ サジェストクリックで値確定
+        div.addEventListener("mousedown", (e) => {
+          // blurより先に動くよう mousedown で処理
+          e.preventDefault();
+          isSelectingSuggestion = true;
+          input.value = item;          // 入力ボックスに確定値をセット
+          clearSuggestions();          // サジェストを閉じる
+        });
+
+        dropdown.appendChild(div);
+      });
+
+      dropdown.classList.remove("hidden");
+    });
+
+    // フォーカスが外れたときの挙動
+    input.addEventListener("blur", () => {
+      // サジェスト選択中の blur は特別扱い
+      setTimeout(() => {
+        if (!isSelectingSuggestion) {
+          // ③ 何も選択せずにフォーカスが外れた場合 → 入力内容をクリア
+          input.value = "";
+        }
+        clearSuggestions();
+        isSelectingSuggestion = false;
+      }, 0);
+    });
+
+    // ボタン押下で入力内容を下部に表示
+    submitBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+      if (value) {
+        resultText.textContent = `入力内容：${value}`;
+      } else {
+        resultText.textContent = "入力内容がありません。";
+      }
+    });
+
+    // サジェストを閉じる共通関数
+    function clearSuggestions() {
+      dropdown.innerHTML = "";
+      dropdown.classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
