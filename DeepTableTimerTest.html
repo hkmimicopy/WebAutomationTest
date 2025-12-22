@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deep Table XPath Timer Test</title>
+
+  <!-- 既存デザインを参照 -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* 既存style.cssがあっても崩れにくいよう最低限だけ */
+    body { font-family: Arial, sans-serif; background: #f7f7fb; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 10px; }
+    .cardLike { background: #fff; border-radius: 8px; padding: 16px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .instruction { font-weight: bold; white-space: pre-line; margin: 10px 0 10px; }
+    .judge { margin-top: 12px; font-weight: bold; }
+    .small { font-size: 12px; color: #666; }
+
+    table.layout { width: 100%; border-collapse: collapse; }
+    table.layout td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+
+    .scrollArea { max-height: 420px; overflow: auto; border: 1px solid #ddd; background: #fff; }
+
+    table.data { width: 100%; border-collapse: collapse; }
+    table.data th, table.data td { border: 1px solid #ccc; padding: 6px 8px; }
+    table.data th { background: #fafafa; position: sticky; top: 0; }
+
+    button { padding: 6px 12px; cursor: pointer; }
+    .disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid #ccc;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <div class="container">
+    <div class="cardLike">
+      <div style="font-weight: bold; margin-bottom: 6px;">Deep Table / 計測トレーニング</div>
+      <div class="small">
+        ・tableレイアウトを多重ネストし、最深部に大量のtr＋ボタンを配置します。<br>
+        ・上部の「計測開始」を押してから、最深部の任意のボタンを押すまでの時間を表示します。<br>
+      </div>
+
+      <div class="instruction" id="instruction">
+【手順】
+1) 「計測開始」を押す
+2) 最深部テーブルの任意の行の「押す」ボタンをクリックする
+      </div>
+
+      <div class="row" style="margin-bottom: 10px;">
+        <button type="button" id="startBtn">計測開始</button>
+        <span class="badge" id="statusBadge">未開始</span>
+        <span class="small">（最深部のボタンを押すと計測終了）</span>
+        <button type="button" id="resetBtn">リセット</button>
+      </div>
+
+      <!-- わざと深いtableネスト（レイアウト目的） -->
+      <table class="layout" aria-label="outer-layout">
+        <tr>
+          <td style="width: 220px;">
+            <div style="font-weight:bold; margin-bottom:6px;">サイド（ダミー）</div>
+            <table class="layout" aria-label="sidebar-layout">
+              <tr><td>リンクA</td></tr>
+              <tr><td>リンクB</td></tr>
+              <tr><td>リンクC</td></tr>
+            </table>
+          </td>
+
+          <td>
+            <div style="font-weight:bold; margin-bottom:6px;">メイン（ネスト開始）</div>
+
+            <table class="layout" aria-label="main-lv1">
+              <tr>
+                <td>
+                  <div style="font-weight:bold; margin-bottom:6px;">ヘッダー（ダミー）</div>
+                  <table class="layout" aria-label="header-lv2">
+                    <tr>
+                      <td>固定表示: <span id="fixedText">XPATH TRAINING</span></td>
+                      <td>行数: <span id="rowCountText"></span></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div style="font-weight:bold; margin-bottom:6px;">コンテンツ（さらに深く）</div>
+
+                  <table class="layout" aria-label="content-lv2">
+                    <tr>
+                      <td>
+                        <div style="font-weight:bold; margin-bottom:6px;">検索（ダミー）</div>
+                        <table class="layout" aria-label="search-lv3">
+                          <tr>
+                            <td><input type="text" placeholder="ここはダミーです" style="width:100%; padding:6px;" /></td>
+                            <td><button type="button" onclick="alert('ダミーです')">検索</button></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <div style="font-weight:bold; margin-bottom:6px;">データ領域（最深部）</div>
+
+                        <table class="layout" aria-label="data-lv3">
+                          <tr>
+                            <td>
+                              <table class="layout" aria-label="data-lv4">
+                                <tr>
+                                  <td>
+                                    <div class="scrollArea">
+                                      <table class="data" aria-label="deep-data-table" id="deepTable">
+                                        <thead>
+                                          <tr>
+                                            <th style="width: 90px;">No</th>
+                                            <th style="width: 200px;">固定ラベル</th>
+                                            <th>説明</th>
+                                            <th style="width: 130px;">操作</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody id="deepTbody">
+                                          <!-- JSで大量生成 -->
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                    <div class="small" style="margin-top:6px;">
+                                      ※最深部に大量のtr＋ボタンがあります（XPath工夫用）
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+
+      <div class="judge" id="resultArea">結果：-</div>
+    </div>
+  </div>
+
+<script>
+  // 固定で大量に作る（必要なら増やしてください）
+  const ROW_COUNT = 600;
+
+  let startTime = null;
+  let isRunning = false;
+
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const statusBadge = document.getElementById("statusBadge");
+  const resultArea = document.getElementById("resultArea");
+  const rowCountText = document.getElementById("rowCountText");
+
+  function setStatus(text) {
+    statusBadge.textContent = text;
+  }
+
+  function fmtMs(ms) {
+    // 例: 1234.56ms / 1.23s 表示
+    const s = ms / 1000;
+    return `${ms.toFixed(2)} ms（${s.toFixed(2)} 秒）`;
+  }
+
+  function buildRows() {
+    const tbody = document.getElementById("deepTbody");
+    tbody.innerHTML = "";
+
+    for (let i = 1; i <= ROW_COUNT; i++) {
+      const no = String(i).padStart(4, "0");
+      const label = `ターゲット-${no}`; // テキストで区別可能
+      const desc = `これは固定行 ${no} です。XPathでこの行のボタンを狙う練習に使えます。`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${no}</td>
+        <td class="labelCell">${label}</td>
+        <td>${desc}</td>
+        <td>
+          <button
+            type="button"
+            class="deepBtn"
+            data-label="${label}"
+          >押す</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // イベントはまとめて付与（大量でも安定）
+    tbody.addEventListener("click", (e) => {
+      const btn = e.target.closest("button.deepBtn");
+      if (!btn) return;
+
+      // 計測中だけ停止処理
+      if (!isRunning || startTime === null) return;
+
+      const elapsed = performance.now() - startTime;
+      isRunning = false;
+
+      setStatus("終了");
+      startBtn.disabled = false;
+      startBtn.classList.remove("disabled");
+
+      const label = btn.dataset.label;
+      resultArea.textContent = `結果：${label} をクリックしました。経過時間：${fmtMs(elapsed)}`;
+    }, { once: false });
+  }
+
+  function startMeasure() {
+    startTime = performance.now();
+    isRunning = true;
+    setStatus("計測中");
+    resultArea.textContent = "結果：計測中…（最深部の「押す」ボタンをクリックしてください）";
+
+    // 二重開始防止
+    startBtn.disabled = true;
+    startBtn.classList.add("disabled");
+  }
+
+  function resetAll() {
+    startTime = null;
+    isRunning = false;
+    setStatus("未開始");
+    resultArea.textContent = "結果：-";
+
+    startBtn.disabled = false;
+    startBtn.classList.remove("disabled");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    rowCountText.textContent = ROW_COUNT;
+    buildRows();
+
+    startBtn.addEventListener("click", startMeasure);
+    resetBtn.addEventListener("click", resetAll);
+  });
+</script>
+</body>
+</html>
