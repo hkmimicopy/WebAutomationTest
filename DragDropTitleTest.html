@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ドラッグ＆ドロップ（タイトル入れ替え）</title>
+
+  <!-- 既存デザイン参照 -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    html, body { margin: 0; }
+    body { background: #f7f7fb; font-family: Arial, sans-serif; }
+
+    .page {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    .explain {
+      text-align: center;
+      margin: 10px 0 16px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .cards {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: stretch;
+      flex-wrap: nowrap; /* 3枚横並びを維持 */
+    }
+
+    .card {
+      width: 300px;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+    }
+
+    /* ドラッグ対象：タイトルバー */
+    .card-title {
+      font-weight: bold;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fafafa;
+      border: 1px solid rgba(0,0,0,0.08);
+      cursor: grab;
+      user-select: none;
+      margin-bottom: 10px;
+    }
+
+    .card-title:active {
+      cursor: grabbing;
+    }
+
+    .card-body {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ドラッグ中の見た目 */
+    .dragging {
+      opacity: 0.5;
+    }
+
+    /* ドロップ先候補のハイライト */
+    .drop-target {
+      outline: 2px dashed rgba(0,0,0,0.25);
+      outline-offset: 4px;
+    }
+
+    .hint {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <div class="page">
+    <div class="explain">
+      タイトル部分をドラッグ＆ドロップして、カードの順番を入れ替えられます。<br>
+      （ドラッグできるのは「タイトル」だけです）
+    </div>
+
+    <div class="cards" id="cards">
+      <div class="card" data-card="1">
+        <div class="card-title" draggable="true">タイトル１</div>
+        <div class="card-body">ここはカード１の本文（ダミー）です。</div>
+      </div>
+
+      <div class="card" data-card="2">
+        <div class="card-title" draggable="true">タイトル２</div>
+        <div class="card-body">ここはカード２の本文（ダミー）です。</div>
+      </div>
+
+      <div class="card" data-card="3">
+        <div class="card-title" draggable="true">タイトル３</div>
+        <div class="card-body">ここはカード３の本文（ダミー）です。</div>
+      </div>
+    </div>
+
+    <div class="hint">※一部ブラウザではドラッグ開始が少しシビアな場合があります。タイトルバーをつかむようにドラッグしてください。</div>
+  </div>
+
+  <script>
+    const container = document.getElementById("cards");
+    let draggedCard = null;
+
+    // タイトルから「親カード」を取得するためのヘルパー
+    function getCardFromTitle(el) {
+      return el.closest(".card");
+    }
+
+    // タイトルはドラッグ開始のトリガー、移動対象はカード（順番を入れ替える）
+    container.addEventListener("dragstart", (e) => {
+      const title = e.target.closest(".card-title");
+      if (!title) return;
+
+      draggedCard = getCardFromTitle(title);
+      if (!draggedCard) return;
+
+      draggedCard.classList.add("dragging");
+
+      // dataTransferは一部ブラウザで必須
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", draggedCard.dataset.card || "");
+    });
+
+    container.addEventListener("dragend", () => {
+      if (draggedCard) draggedCard.classList.remove("dragging");
+      clearDropTargets();
+      draggedCard = null;
+    });
+
+    // ドロップを許可するために必要
+    container.addEventListener("dragover", (e) => {
+      // dropを有効化
+      e.preventDefault();
+
+      const overCard = e.target.closest(".card");
+      if (!overCard || !draggedCard || overCard === draggedCard) {
+        clearDropTargets();
+        return;
+      }
+
+      clearDropTargets();
+      overCard.classList.add("drop-target");
+    });
+
+    container.addEventListener("drop", (e) => {
+      e.preventDefault();
+
+      const dropCard = e.target.closest(".card");
+      if (!dropCard || !draggedCard || dropCard === draggedCard) return;
+
+      // 入れ替え（DOM順序を変更）
+      // dropCardの前後どちらに入れるかを、位置で判断
+      const rect = dropCard.getBoundingClientRect();
+      const isAfter = e.clientX > rect.left + rect.width / 2;
+
+      if (isAfter) {
+        // dropCardの後ろに draggedCard を挿入
+        container.insertBefore(draggedCard, dropCard.nextSibling);
+      } else {
+        // dropCardの前に draggedCard を挿入
+        container.insertBefore(draggedCard, dropCard);
+      }
+
+      clearDropTargets();
+    });
+
+    function clearDropTargets() {
+      container.querySelectorAll(".drop-target").forEach(el => el.classList.remove("drop-target"));
+    }
+  </script>
+</body>
+</html>
