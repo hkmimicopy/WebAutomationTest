@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DIVスクショ比較（色変更）テスト</title>
+
+  <!-- 既存デザイン参照 -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { background: #f7f7fb; font-family: Arial, sans-serif; }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .explain {
+      text-align: center;
+      margin: 10px 0 16px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* 中央に撮影対象＋右に操作パネル */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* 撮影対象領域（スクショ対象にしやすいよう固定サイズ） */
+    #captureBox {
+      width: 520px;
+      height: 220px;
+      margin: 0 auto;
+      background: rgb(255, 255, 255);
+      color: rgb(0, 0, 0);
+      border: 2px solid rgba(0,0,0,0.15);
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      box-sizing: border-box;
+    }
+
+    /* 右の操作パネル */
+    .panel {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .group {
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #666;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #777;
+      line-height: 1.5;
+    }
+
+    /* 画面幅が狭い場合は縦並び */
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      #captureBox {
+        width: 100%;
+        max-width: 520px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <div class="page">
+    <div class="explain">
+      中央の枠（DIV）をスクリーンショット撮影し、画像比較する実験用ページです。<br>
+      右の操作パネルで「背景色」「文字色」をRGBで変更できます。
+    </div>
+
+    <div class="layout">
+      <!-- 撮影対象のDIV -->
+      <div id="captureBox">この文字列はテストです</div>
+
+      <!-- 操作パネル -->
+      <aside class="panel">
+        <h3>色変更パネル（RGB）</h3>
+
+        <!-- 背景色 -->
+        <div class="group">
+          <div style="font-weight:bold; margin-bottom:8px;">背景色</div>
+
+          <div class="row">
+            <div>
+              <label for="bgR">R (0-255)</label>
+              <input id="bgR" type="number" min="0" max="255" value="255">
+            </div>
+            <div>
+              <label for="bgG">G (0-255)</label>
+              <input id="bgG" type="number" min="0" max="255" value="255">
+            </div>
+            <div>
+              <label for="bgB">B (0-255)</label>
+              <input id="bgB" type="number" min="0" max="255" value="255">
+            </div>
+          </div>
+
+          <button id="applyBgBtn" type="button">背景色を反映</button>
+        </div>
+
+        <!-- 文字色 -->
+        <div class="group">
+          <div style="font-weight:bold; margin-bottom:8px;">文字色</div>
+
+          <div class="row">
+            <div>
+              <label for="txR">R (0-255)</label>
+              <input id="txR" type="number" min="0" max="255" value="0">
+            </div>
+            <div>
+              <label for="txG">G (0-255)</label>
+              <input id="txG" type="number" min="0" max="255" value="0">
+            </div>
+            <div>
+              <label for="txB">B (0-255)</label>
+              <input id="txB" type="number" min="0" max="255" value="0">
+            </div>
+          </div>
+
+          <button id="applyTextBtn" type="button">文字色を反映</button>
+        </div>
+
+        <div class="note">
+          ・RGBは0〜255の範囲で入力してください。<br>
+          ・反映ボタンを押すと中央のDIVに即時反映されます。
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const captureBox = document.getElementById("captureBox");
+
+    function clamp255(v) {
+      const n = Number(v);
+      if (Number.isNaN(n)) return 0;
+      return Math.max(0, Math.min(255, Math.floor(n)));
+    }
+
+    function getRGB(prefix) {
+      const r = clamp255(document.getElementById(prefix + "R").value);
+      const g = clamp255(document.getElementById(prefix + "G").value);
+      const b = clamp255(document.getElementById(prefix + "B").value);
+      return { r, g, b };
+    }
+
+    document.getElementById("applyBgBtn").addEventListener("click", () => {
+      const { r, g, b } = getRGB("bg");
+      captureBox.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+      // 不正値が入っていた場合に入力欄にも丸めた値を戻す
+      document.getElementById("bgR").value = r;
+      document.getElementById("bgG").value = g;
+      document.getElementById("bgB").value = b;
+    });
+
+    document.getElementById("applyTextBtn").addEventListener("click", () => {
+      const { r, g, b } = getRGB("tx");
+      captureBox.style.color = `rgb(${r}, ${g}, ${b})`;
+
+      document.getElementById("txR").value = r;
+      document.getElementById("txG").value = g;
+      document.getElementById("txB").value = b;
+    });
+  </script>
+</body>
+</html>
