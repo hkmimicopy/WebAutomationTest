@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>フラットDOM テーブル風</title>
+
+  <!-- 既存デザイン参照 -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7fb; margin: 0; }
+    .page { max-width: 1100px; margin: 20px auto; padding: 12px; box-sizing: border-box; }
+
+    .explain {
+      text-align: center;
+      margin: 10px 0 16px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    /* ここが“テーブルに見える”ためのグリッド */
+    .flat-table {
+      display: grid;
+
+      /* 列構成：
+         1列目: checkbox
+         2列目: id
+         3列目: fruit
+         4列目以降: 追加列（例として2列追加）
+      */
+      grid-template-columns: 80px 120px 240px 160px 160px;
+
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      overflow: hidden; /* 角丸を効かせたい場合。不要なら消してOK */
+      background: #fff;
+    }
+
+    /* ヘッダーセルっぽい見た目 */
+    .cell.header {
+      background: #fafafa;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    /* 共通セル */
+    .cell {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      border-right: 1px solid rgba(0,0,0,0.08);
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      min-height: 42px; /* 行高を安定させる */
+    }
+
+    /* 最終列の右罫線を消す */
+    .cell.end-col { border-right: none; }
+
+    /* 最終行の下罫線を消す（JSで付けます） */
+    .cell.end-row { border-bottom: none; }
+
+    .cell.center { justify-content: center; }
+    .cell.right { justify-content: flex-end; }
+
+    /* 画面が狭い場合は横スクロール（見た目は表のまま） */
+    .table-scroll {
+      overflow: auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 999px;
+      font-size: 12px;
+      background: #fafafa;
+      color: #444;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="link_container"><a href="index.html">ホームページへ戻る</a></div>
+
+  <div class="page">
+    <div class="explain">
+      見た目はテーブル形式ですが、DOMツリー上は <b>1つのコンテナ直下に全セルが同階層</b>で並びます。<br>
+      （tr/tdは使わず、CSS Gridで表っぽく見せています）
+    </div>
+
+    <div class="panel">
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+        <span class="badge">列: Checkbox / ID / Fruit / Col4 / Col5</span>
+        <span class="badge">DOM: .flat-table 直下に .cell がずらっと並ぶ</span>
+      </div>
+
+      <div class="table-scroll">
+        <!-- DOM的にここ直下が全部同階層（セルがフラットに並ぶ） -->
+        <div class="flat-table" id="flatTable">
+          <!-- ヘッダー（これも同階層） -->
+          <div class="cell header center">選択</div>
+          <div class="cell header">ID</div>
+          <div class="cell header">果物</div>
+          <div class="cell header">列4</div>
+          <div class="cell header end-col">列5</div>
+
+          <!-- データ行（trなし、全部同階層のdivセル） -->
+          <!-- 行1 -->
+          <div class="cell center"><input type="checkbox" aria-label="row1-check"></div>
+          <div class="cell">1</div>
+          <div class="cell">りんご</div>
+          <div class="cell">A-001</div>
+          <div class="cell end-col">在庫あり</div>
+
+          <!-- 行2 -->
+          <div class="cell center"><input type="checkbox" aria-label="row2-check"></div>
+          <div class="cell">2</div>
+          <div class="cell">みかん</div>
+          <div class="cell">A-002</div>
+          <div class="cell end-col">在庫なし</div>
+
+          <!-- 行3 -->
+          <div class="cell center"><input type="checkbox" aria-label="row3-check"></div>
+          <div class="cell">3</div>
+          <div class="cell">ぶどう</div>
+          <div class="cell">A-003</div>
+          <div class="cell end-col">在庫あり</div>
+
+          <!-- 行4 -->
+          <div class="cell center"><input type="checkbox" aria-label="row4-check"></div>
+          <div class="cell">4</div>
+          <div class="cell">バナナ</div>
+          <div class="cell">A-004</div>
+          <div class="cell end-col">在庫あり</div>
+
+          <!-- 行5（最後の行：下罫線消しをJSで付与） -->
+          <div class="cell center"><input type="checkbox" aria-label="row5-check"></div>
+          <div class="cell">5</div>
+          <div class="cell">メロン</div>
+          <div class="cell">A-005</div>
+          <div class="cell end-col">在庫なし</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 見た目を整えるために「最後の行の下罫線」を消す処理
+    // （DOMはフラットなので、最後の“行”を計算して該当セルに class を付与）
+    (function () {
+      const table = document.getElementById("flatTable");
+      const cells = Array.from(table.querySelectorAll(".cell"));
+      // 先頭にヘッダー行が1行分ある
+      const COLS = 5; // grid-template-columns の列数に合わせる
+      const headerCells = COLS;
+      const dataCells = cells.length - headerCells;
+      const dataRows = Math.floor(dataCells / COLS);
+
+      // 最後のデータ行の開始インデックス（cells全体の中で）
+      const lastRowStart = headerCells + (dataRows - 1) * COLS;
+
+      for (let i = 0; i < COLS; i++) {
+        const c = cells[lastRowStart + i];
+        if (c) c.classList.add("end-row");
+      }
+    })();
+  </script>
+</body>
+</html>
